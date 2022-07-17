@@ -19,6 +19,10 @@ services:
     image: 'danielvasic1/yellow-backend:latest'
     ports:
       - '8080:8080'
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - KAFKA_HOST=kafka
     depends_on:
       - mysql
       - kafka
@@ -29,7 +33,7 @@ services:
     environment:
       - KAFKA_BROKER_ID=1
       - KAFKA_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
     depends_on:
