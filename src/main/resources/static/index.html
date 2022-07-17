@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Yellow backend application</title>
+    <script src="http://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js" integrity="sha512-1QvjE7BtotQjkq8PxLeF6P46gEpBRXuskzIVgjFpekzFVF4yjRgrQvTG1MTOJ3yQgvTteKAcO7DSZI92+u/yZw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js" integrity="sha512-iKDtgDyTHjAitUDdLljGhenhPwrbBfqTKWO1mkhSFH3A7blITC9MhYon6SjnMhp4o0rADGw9yAC6EW4t5a4K3g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js" integrity="sha512-xIPqqrfvUAc/Cspuj7Bq0UtHNo/5qkdyngx6Vwt+tmbvTLDszzXM0G6c91LXmGrRx8KEPulT+AfOOez+TeVylg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        var _events;
+        var _markets;
+        $( document ).ready(function() {
+            connect();
+            initialize();
+        });
+
+        // Bad idea, but I don't care anymore  :-)
+        function isValidEvent (event){
+            return new Date(event.startsAt) > new Date() && event.status === "ACTIVE"
+        }
+
+        function isValidMarket (market){
+            return market.status === "ACTIVE"
+        }
+
+        function initialize () {
+            axios("http://localhost:8080/api/events").then(function (response){
+                showEvents(response.data);
+                _events = response.data
+            });
+            axios("http://localhost:8080/api/markets").then(function (response){
+                showMarkets(response.data);
+                _markets = response.data
+            });
+        }
+
+        function showEvents (events){
+            var ul = $("<ul></ul>")
+            for (var i in events){
+                let itm = events[i];
+                if (!isValidEvent(itm)) continue
+                var li = $("<li></li>").html(itm.id+ " " + itm.name);
+                ul.append(li);
+            }
+            $("#events").html(ul);
+        }
+
+        function showMarkets (markets){
+            var ul = $("<ul></ul>")
+            for (let i in markets){
+                let itm = markets[i];
+                if (!isValidMarket(itm)) continue
+                let li = $("<li></li>").html(itm.id);
+                ul.append(li);
+            }
+            $("#markets").html(ul);
+        }
+
+        function connect() {
+            var socket = new SockJS('http://localhost:8080/ws-yellow');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (frame) {
+                stompClient.subscribe('/topic/event', function (event) {
+                    _events.push(JSON.parse(event.body));
+                    showEvents(_events)
+                    $('#textArea').val(event);
+                });
+                stompClient.subscribe('/topic/market', function (market) {
+                    _markets.push(JSON.parse(market.body));
+                    showMarkets(_markets)
+                    $('#textArea').val(market);
+                });
+            });
+        }
+    </script>
+</head>
+<body>
+    <textarea id="textArea" style="width: 100%; box-sizing: border-box" cols="10" rows="10"></textarea>
+    <div>
+        <h1>List markets</h1>
+        <div id="markets"></div>
+    </div>
+    <div>
+        <h1>List events</h1>
+        <div id="events"></div>
+    </div>
+    <p>Demo application for Yellow Backend, the full documentation of the API is available <a href="/swagger-ui/">here</a>.</a></p>
+</body>
+</html>

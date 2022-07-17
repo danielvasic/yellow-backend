@@ -1,0 +1,13 @@
+{
+  "properties": [
+    {
+      "name": "spring.event.topic.name",
+      "type": "java.lang.String",
+      "description": "Name of the event topic."
+    },
+    {
+      "name": "spring.market.topic.name",
+      "type": "java.lang.String",
+      "description": "Description for spring.market.topic.name."
+    }
+  ] }
